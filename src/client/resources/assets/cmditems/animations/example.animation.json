@@ -1,0 +1,22 @@
+{
+	"format_version": "1.8.0",
+	"animations": {
+		"basic": {
+			"loop": true,
+			"animation_length": 8,
+			"bones": {
+				"bone": {
+					"rotation": {
+						"vector": ["query.anim_time * 45", "query.anim_time * 45     ", "-query.anim_time * 45"]
+					}
+				},
+				"bone2": {
+					"rotation": {
+						"vector": ["-query.anim_time * 45", "-query.anim_time * 45     ", "query.anim_time * 45"]
+					}
+				}
+			}
+		}
+	},
+	"geckolib_format_version": 2
+}

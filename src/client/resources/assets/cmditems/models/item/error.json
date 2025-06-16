@@ -1,0 +1,12 @@
+{
+  "credit": "Author: _BENDY659_",
+  "parent": "builtin/entity",
+  "texture_size": [ 32, 32 ],
+  "display": {
+    "gui": {
+      "rotation": [ -17, 160, 9 ],
+      "translation": [ 0, -2, 0 ]
+    }
+  },
+  "textures": { "particle": "item/error" }
+}

@@ -5,28 +5,21 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.ItemRenderer;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.CustomModelData;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import ru.benos.cmditems.client.CmdItem;
-import ru.benos.cmditems.client.CmdItemRenderer;
-import ru.benos.cmditems.client.CmdRegister;
-import ru.benos.cmditems.client.Resources;
+import ru.benos.cmditems.client.*;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.renderer.GeoItemRenderer;
 
 import java.util.Objects;
 
 @Mixin(ItemRenderer.class)
 public class MixinItemRenderer {
-    @Unique
-    private static final CmdItem item = CmdRegister.INSTANCE.getCMD_ITEM();
-
     @Inject(method = "renderItem", at = @At("HEAD"), cancellable = true)
     public void onRenderItem(
             ItemStack itemStack,
@@ -45,10 +38,30 @@ public class MixinItemRenderer {
             String modelId = Resources.INSTANCE.getModels().get(customModelData.value()+"");
 
             if(modelId != null) {
-                ItemStack proxyStack = new ItemStack(item);
-                GeoItemRenderer<CmdItem> renderer = new CmdItemRenderer(item.getGeoModel(customModelData.value()));
+                var cache = CmdItemCache.INSTANCE.getCache(customModelData.value(), modelId);
+                CmdItem item = CmdRegister.INSTANCE.getCMD_ITEM();
 
+                ItemStack proxyStack;
+                AnimatableInstanceCache animatableInstanceCache;
+                GeoItemRenderer<CmdItem> renderer;
+
+                animatableInstanceCache = cache.getAnimatableInstanceCache();
+                item.setAnimatableInstanceCache(animatableInstanceCache);
+                renderer = cache.getItemRendererCache();
+
+                proxyStack = cache.getItemStack();
+
+                //GeoItemRenderer<CmdItem> renderer = new CmdItemRenderer(item.getGeoModel(customModelData.value()));
+                //GeoItemRenderer<CmdItem> renderer = CmdRenderersCache.INSTANCE.getRenderer(customModelData.value());
                 renderer.renderByItem(proxyStack, displayContext, poseStack, bufferSource, packedLight, packedOverlay);
+
+                CmdItemCache.INSTANCE.putCache(
+                        modelId,
+                        customModelData.value(),
+                        proxyStack,
+                        animatableInstanceCache,
+                        renderer
+                );
 
                 ci.cancel();
             }

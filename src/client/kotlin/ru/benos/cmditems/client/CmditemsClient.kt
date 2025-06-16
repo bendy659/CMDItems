@@ -31,8 +31,12 @@ class CmditemsClient : ClientModInitializer {
                 override fun getFabricId(): ResourceLocation =
                     "$MODID:resources".rl
 
-                override fun onResourceManagerReload(resourceManager: ResourceManager) =
-                    Resources.loadModels(resourceManager)
+                override fun onResourceManagerReload(resourceManager: ResourceManager) {
+                    Resources.apply {
+                        loadModels(resourceManager)
+                        loadDisplays(resourceManager)
+                    }
+                }
             }
         )
     }

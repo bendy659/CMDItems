@@ -4,6 +4,7 @@ import java.net.URI
 
 plugins {
     kotlin("jvm") version "2.1.20"
+    kotlin("plugin.serialization") version "2.1.20"
     id("fabric-loom") version "1.10-SNAPSHOT"
     id("maven-publish")
 }

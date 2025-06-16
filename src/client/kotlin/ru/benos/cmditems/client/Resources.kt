@@ -47,8 +47,6 @@ object Resources {
             val resource = ResourceLocation.tryBuild(MODID, "displays/$value.display.json") ?: return@forEach
             val stream = resourceManager.getResource(resource).orElse(null)?.open()
 
-            LOGGER.info("Trying load resource: $resource | ${!resourceManager.getResource(resource).isEmpty}")
-
             val settings = try {
                 if (stream == null) {
                     LOGGER.info("No display config found for model '$value', using default.")

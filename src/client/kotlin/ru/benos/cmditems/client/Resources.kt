@@ -12,7 +12,7 @@ object Resources {
     var models: MutableMap<String, String> = mutableMapOf()
         private set
 
-    var displays: MutableMap<String, CmdItemDisplay.DisplaySettings> = mutableMapOf()
+    var displays: MutableMap<String, CmdItemDisplay.DisplayInfo> = mutableMapOf()
         private set
 
     fun loadModels(resourceManager: ResourceManager) {
@@ -59,12 +59,12 @@ object Resources {
 
                 if (stream == null) {
                     LOGGER.info("No display config found for model '$modelName', using default.")
-                    CmdItemDisplay.DisplaySettings()
+                    CmdItemDisplay.DisplayInfo()
                 } else {
                     stream.use { input ->
                         val reader = InputStreamReader(input)
                         val parsed = json.decodeFromString(
-                            CmdItemDisplay.DisplaySettings.serializer(),
+                            CmdItemDisplay.DisplayInfo.serializer(),
                             reader.readText()
                         )
                         parsed.withDefaultsFilled()
@@ -72,7 +72,7 @@ object Resources {
                 }
             } catch (e: Exception) {
                 LOGGER.warning("Failed to load display setting for model [$modelName], using default. Error: ${e.message}")
-                CmdItemDisplay.DisplaySettings()
+                CmdItemDisplay.DisplayInfo()
             }
 
             displays[modelName] = settings
@@ -83,7 +83,7 @@ object Resources {
                 appendLine()
                 appendLine("=== [ CMDITEMS | DISPLAYS SETTINGS ] ===")
                 displays.entries.forEach { (key, value) ->
-                    val serialized = json.encodeToString(CmdItemDisplay.DisplaySettings.serializer(), value)
+                    val serialized = json.encodeToString(CmdItemDisplay.DisplayInfo.serializer(), value)
                     appendLine("$key = $serialized")
                 }
                 appendLine("========================================")
@@ -92,18 +92,20 @@ object Resources {
         }
     }
 
-    private fun CmdItemDisplay.DisplaySettings.withDefaultsFilled(): CmdItemDisplay.DisplaySettings {
-        fun CmdItemDisplay.DisplayInfo?.orDefault(): CmdItemDisplay.DisplayInfo = this ?: CmdItemDisplay.DisplayInfo()
+    private fun CmdItemDisplay.DisplayInfo.withDefaultsFilled(): CmdItemDisplay.DisplayInfo {
+        fun CmdItemDisplay.Transform?.orDefault(): CmdItemDisplay.Transform = this ?: CmdItemDisplay.Transform()
 
-        return CmdItemDisplay.DisplaySettings(
-            firstPersonLeftHand = firstPersonLeftHand.orDefault(),
-            firstPersonRightHand = firstPersonRightHand.orDefault(),
-            thirdPersonLeftHand = thirdPersonLeftHand.orDefault(),
-            thirdPersonRightHand = thirdPersonRightHand.orDefault(),
-            head = head.orDefault(),
-            ground = ground.orDefault(),
-            fixed = fixed.orDefault(),
-            gui = gui.orDefault(),
+        return CmdItemDisplay.DisplayInfo(
+            CmdItemDisplay.Display(
+                display.firstPersonLeftHand.orDefault(),
+                display.firstPersonRightHand.orDefault(),
+                display.thirdPersonLeftHand.orDefault(),
+                display.thirdPersonRightHand.orDefault(),
+                head = display.head.orDefault(),
+                ground = display.ground.orDefault(),
+                fixed = display.fixed.orDefault(),
+                gui = display.gui.orDefault()
+            ),
             renderType = renderType
         )
     }

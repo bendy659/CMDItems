@@ -1,7 +1,7 @@
 package ru.benos.cmditems.client
 
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.math.Axis
+import com.mojang.blaze3d.vertex.PoseStack.Pose
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.RenderType
 import net.minecraft.core.Registry
@@ -12,6 +12,7 @@ import net.minecraft.resources.ResourceLocation
 import net.minecraft.world.item.Item
 import net.minecraft.world.item.ItemDisplayContext
 import net.minecraft.world.item.ItemStack
+import org.joml.Quaternionf
 import ru.benos.cmditems.client.CmditemsClient.Companion.MODID
 import ru.benos.cmditems.client.CmditemsClient.Companion.rl
 import software.bernie.geckolib.animatable.GeoItem
@@ -57,10 +58,10 @@ class CmdItemModel(private val id: String): GeoModel<CmdItem>() {
     override fun getAnimationResource(p0: CmdItem?): ResourceLocation = "$MODID:animations/$id.animation.json".rl
 
     override fun getRenderType(animatable: CmdItem?, texture: ResourceLocation): RenderType? {
-        val displaySettings = Resources.displays[id]
+        val display = Resources.displays[id]
 
-        if(displaySettings != null) {
-            return when(displaySettings.renderType) {
+        if(display != null) {
+            return when(display.renderType) {
                 CmdItemDisplay.RenderType.DEFAULT -> super.getRenderType(animatable, texture)
                 CmdItemDisplay.RenderType.GLOW -> RenderType.entityTranslucentEmissive(texture)
                 CmdItemDisplay.RenderType.LIGHT -> super.getRenderType(animatable, texture) // TODO
@@ -72,8 +73,8 @@ class CmdItemModel(private val id: String): GeoModel<CmdItem>() {
 
 class CmdItemRenderer(
     geoModel: GeoModel<CmdItem>,
-    private val displaySettings: CmdItemDisplay.DisplaySettings
-): GeoItemRenderer<CmdItem>(geoModel) {
+    private val display: CmdItemDisplay.DisplayInfo
+) : GeoItemRenderer<CmdItem>(geoModel) {
     override fun renderByItem(
         stack: ItemStack,
         transformType: ItemDisplayContext,
@@ -83,66 +84,70 @@ class CmdItemRenderer(
         packedOverlay: Int
     ) {
         poseStack.pushPose()
-        val transform: (List<Double>, List<Double>, List<Double>) -> Unit = { t, r, s ->
+        val transform: (Boolean, List<Double>, List<Double>, List<Double>) -> Unit = { leftHand, t, r, s ->
             poseStack.apply {
-                mulPose(Axis.XP.rotationDegrees(r[0].toFloat()))
-                mulPose(Axis.YP.rotationDegrees(r[2].toFloat()))
-                mulPose(Axis.ZP.rotationDegrees(r[1].toFloat()))
+                translate(
+                    t[0] / 16.0,
+                    t[1] / 16.0,
+                    t[2] / 16.0
+                )
 
-                scale(s[0].toFloat(), s[2].toFloat(), s[1].toFloat())
+                mulPose(Quaternionf().rotateXYZ(
+                    Math.toRadians(r[0]).toFloat(),
+                    Math.toRadians(r[1]).toFloat(),
+                    Math.toRadians(r[2]).toFloat()
+                ))
 
-                translate(t[0], t[2], t[1])
+                scale(
+                    s[0].toFloat(),
+                    s[1].toFloat(),
+                    s[2].toFloat()
+                )
             }
         }
 
-        when(transformType) {
-            ItemDisplayContext.FIRST_PERSON_LEFT_HAND -> transform(
-                displaySettings.firstPersonLeftHand.transition,
-                displaySettings.firstPersonLeftHand.rotation,
-                displaySettings.firstPersonLeftHand.scale
+        when (transformType) {
+            ItemDisplayContext.FIRST_PERSON_LEFT_HAND -> transform(true,
+                display.display.firstPersonLeftHand.transition,
+                display.display.firstPersonLeftHand.rotation,
+                display.display.firstPersonLeftHand.scale
             )
-            ItemDisplayContext.FIRST_PERSON_RIGHT_HAND -> transform(
-                displaySettings.firstPersonRightHand.transition,
-                displaySettings.firstPersonRightHand.rotation,
-                displaySettings.firstPersonRightHand.scale
+            ItemDisplayContext.FIRST_PERSON_RIGHT_HAND -> transform(false,
+                display.display.firstPersonRightHand.transition,
+                display.display.firstPersonRightHand.rotation,
+                display.display.firstPersonRightHand.scale
             )
-
-            ItemDisplayContext.THIRD_PERSON_LEFT_HAND -> transform(
-                displaySettings.thirdPersonLeftHand.transition,
-                displaySettings.thirdPersonLeftHand.rotation,
-                displaySettings.thirdPersonLeftHand.scale
+            ItemDisplayContext.THIRD_PERSON_LEFT_HAND -> transform(true,
+                display.display.thirdPersonLeftHand.transition,
+                display.display.thirdPersonLeftHand.rotation,
+                display.display.thirdPersonLeftHand.scale
             )
-            ItemDisplayContext.THIRD_PERSON_RIGHT_HAND -> transform(
-                displaySettings.thirdPersonRightHand.transition,
-                displaySettings.thirdPersonRightHand.rotation,
-                displaySettings.thirdPersonRightHand.scale
+            ItemDisplayContext.THIRD_PERSON_RIGHT_HAND -> transform(false,
+                display.display.thirdPersonRightHand.transition,
+                display.display.thirdPersonRightHand.rotation,
+                display.display.thirdPersonRightHand.scale
             )
-
-            ItemDisplayContext.HEAD -> transform(
-                displaySettings.head.transition,
-                displaySettings.head.rotation,
-                displaySettings.head.scale
+            ItemDisplayContext.HEAD -> transform(false,
+                display.display.head.transition,
+                display.display.head.rotation,
+                display.display.head.scale
             )
-
-            ItemDisplayContext.GROUND -> transform(
-                displaySettings.ground.transition,
-                displaySettings.ground.rotation,
-                displaySettings.ground.scale
+            ItemDisplayContext.GROUND -> transform(false,
+                display.display.ground.transition,
+                display.display.ground.rotation,
+                display.display.ground.scale
             )
-
-            ItemDisplayContext.FIXED ->  transform(
-                displaySettings.fixed.transition,
-                displaySettings.fixed.rotation,
-                displaySettings.fixed.scale
+            ItemDisplayContext.FIXED -> transform(false,
+                display.display.fixed.transition,
+                display.display.fixed.rotation,
+                display.display.fixed.scale
             )
-
-            ItemDisplayContext.GUI -> transform(
-                displaySettings.gui.transition,
-                displaySettings.gui.rotation,
-                displaySettings.gui.scale
+            ItemDisplayContext.GUI -> transform(false,
+                display.display.gui.transition,
+                display.display.gui.rotation,
+                display.display.gui.scale
             )
-
-            else -> transform(
+            else -> transform(false,
                 listOf(0.0, 0.0, 0.0),
                 listOf(0.0, 0.0, 0.0),
                 listOf(1.0, 1.0, 1.0)
@@ -154,47 +159,47 @@ class CmdItemRenderer(
     }
 }
 
-object CmdRegister {
-    val CMD_ITEM: CmdItem = Registry.register(
-        BuiltInRegistries.ITEM,
-        "cmd_item",
-        CmdItem(
-            Item.Properties()
-                .useItemDescriptionPrefix()
-                .setId(ResourceKey.create(Registries.ITEM, "cmd_item".rl))
-        )
-    )
-}
+        object CmdRegister {
+            val CMD_ITEM: CmdItem = Registry.register(
+                BuiltInRegistries.ITEM,
+                "cmd_item",
+                CmdItem(
+                    Item.Properties()
+                        .useItemDescriptionPrefix()
+                        .setId(ResourceKey.create(Registries.ITEM, "cmd_item".rl))
+                )
+            )
+        }
 
-object CmdItemCache {
-    private var cache: MutableMap<Int, CmdItemCache> = mutableMapOf()
+        object CmdItemCache {
+            private var cache: MutableMap<Int, CmdItemCache> = mutableMapOf()
 
-    data class CmdItemCache(
-        val model: String,
-        val itemStack: ItemStack,
-        val animatableInstanceCache: AnimatableInstanceCache,
-        val itemRendererCache: CmdItemRenderer
-    )
+            data class CmdItemCache(
+                val model: String,
+                val itemStack: ItemStack,
+                val animatableInstanceCache: AnimatableInstanceCache,
+                val itemRendererCache: CmdItemRenderer
+            )
 
-    fun clearCache() = cache.clear()
+            fun clearCache() = cache.clear()
 
-    fun getCache(customModelData: Int, model: String): CmdItemCache {
-        val item = CmdRegister.CMD_ITEM
-        val displaySettings = Resources.displays[model] ?: CmdItemDisplay.DisplaySettings()
+            fun getCache(customModelData: Int, model: String): CmdItemCache {
+                val item = CmdRegister.CMD_ITEM
+                val display = Resources.displays[model] ?: CmdItemDisplay.DisplayInfo()
 
-        return cache[customModelData] ?: CmdItemCache(
-            model,
-            ItemStack(item),
-            GeckoLibUtil.createInstanceCache(item),
-            CmdItemRenderer(item.getGeoModel(customModelData), displaySettings)
-        )
-    }
+                return cache[customModelData] ?: CmdItemCache(
+                    model,
+                    ItemStack(item),
+                    GeckoLibUtil.createInstanceCache(item),
+                    CmdItemRenderer(item.getGeoModel(customModelData), display)
+                )
+            }
 
-    fun putCache(
-        model: String,
-        customModelData: Int,
-        newItemStack: ItemStack,
-        newAnimatableInstanceCache: AnimatableInstanceCache,
-        newItemRendererCache: CmdItemRenderer
-    ) { cache[customModelData] = CmdItemCache(model, newItemStack, newAnimatableInstanceCache, newItemRendererCache) }
-}
+            fun putCache(
+                model: String,
+                customModelData: Int,
+                newItemStack: ItemStack,
+                newAnimatableInstanceCache: AnimatableInstanceCache,
+                newItemRendererCache: CmdItemRenderer
+            ) { cache[customModelData] = CmdItemCache(model, newItemStack, newAnimatableInstanceCache, newItemRendererCache) }
+        }

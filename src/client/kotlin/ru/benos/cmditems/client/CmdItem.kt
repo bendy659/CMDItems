@@ -1,7 +1,6 @@
 package ru.benos.cmditems.client
 
 import com.mojang.blaze3d.vertex.PoseStack
-import com.mojang.blaze3d.vertex.PoseStack.Pose
 import net.minecraft.client.renderer.MultiBufferSource
 import net.minecraft.client.renderer.RenderType
 import net.minecraft.core.Registry
@@ -159,47 +158,47 @@ class CmdItemRenderer(
     }
 }
 
-        object CmdRegister {
-            val CMD_ITEM: CmdItem = Registry.register(
-                BuiltInRegistries.ITEM,
-                "cmd_item",
-                CmdItem(
-                    Item.Properties()
-                        .useItemDescriptionPrefix()
-                        .setId(ResourceKey.create(Registries.ITEM, "cmd_item".rl))
-                )
-            )
-        }
+object CmdRegister {
+    val CMD_ITEM: CmdItem = Registry.register(
+        BuiltInRegistries.ITEM,
+        "cmd_item",
+        CmdItem(
+            Item.Properties()
+                .useItemDescriptionPrefix()
+                .setId(ResourceKey.create(Registries.ITEM, "cmd_item".rl))
+        )
+    )
+}
 
-        object CmdItemCache {
-            private var cache: MutableMap<Int, CmdItemCache> = mutableMapOf()
+object CmdItemCache {
+    private var cache: MutableMap<Int, CmdItemCache> = mutableMapOf()
 
-            data class CmdItemCache(
-                val model: String,
-                val itemStack: ItemStack,
-                val animatableInstanceCache: AnimatableInstanceCache,
-                val itemRendererCache: CmdItemRenderer
-            )
+    data class CmdItemCache(
+        val model: String,
+        val itemStack: ItemStack,
+        val animatableInstanceCache: AnimatableInstanceCache,
+        val itemRendererCache: CmdItemRenderer
+    )
 
-            fun clearCache() = cache.clear()
+    fun clearCache() = cache.clear()
 
-            fun getCache(customModelData: Int, model: String): CmdItemCache {
-                val item = CmdRegister.CMD_ITEM
-                val display = Resources.displays[model] ?: CmdItemDisplay.DisplayInfo()
+    fun getCache(customModelData: Int, model: String): CmdItemCache {
+        val item = CmdRegister.CMD_ITEM
+        val display = Resources.displays[model] ?: CmdItemDisplay.DisplayInfo()
 
-                return cache[customModelData] ?: CmdItemCache(
-                    model,
-                    ItemStack(item),
-                    GeckoLibUtil.createInstanceCache(item),
-                    CmdItemRenderer(item.getGeoModel(customModelData), display)
-                )
-            }
+        return cache[customModelData] ?: CmdItemCache(
+            model,
+            ItemStack(item),
+            GeckoLibUtil.createInstanceCache(item),
+            CmdItemRenderer(item.getGeoModel(customModelData), display)
+        )
+    }
 
-            fun putCache(
-                model: String,
-                customModelData: Int,
-                newItemStack: ItemStack,
-                newAnimatableInstanceCache: AnimatableInstanceCache,
-                newItemRendererCache: CmdItemRenderer
-            ) { cache[customModelData] = CmdItemCache(model, newItemStack, newAnimatableInstanceCache, newItemRendererCache) }
-        }
+    fun putCache(
+        model: String,
+        customModelData: Int,
+        newItemStack: ItemStack,
+        newAnimatableInstanceCache: AnimatableInstanceCache,
+        newItemRendererCache: CmdItemRenderer
+    ) { cache[customModelData] = CmdItemCache(model, newItemStack, newAnimatableInstanceCache, newItemRendererCache) }
+}

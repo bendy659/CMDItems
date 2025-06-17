@@ -12,14 +12,20 @@
 			},
 			"bones": [
 				{
-					"name": "bone",
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "out",
+					"parent": "root",
 					"pivot": [0, 0, 0],
 					"cubes": [
 						{"origin": [-4, -4, -4], "size": [8, 8, 8], "uv": [0, 0]}
 					]
 				},
 				{
-					"name": "bone2",
+					"name": "in",
+					"parent": "out",
 					"pivot": [0, 0, 0],
 					"cubes": [
 						{"origin": [-6, -6, -6], "size": [12, 12, 12], "uv": [0, 16]}

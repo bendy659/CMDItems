@@ -41,19 +41,28 @@ object Resources {
     }
 
     fun loadDisplays(resourceManager: ResourceManager) {
-        val json = Json { ignoreUnknownKeys = true }
+        // Очистка кеша //
+        displays.clear()
 
-        models.forEach { (_, value) ->
-            val resource = ResourceLocation.tryBuild(MODID, "displays/$value.display.json") ?: return@forEach
-            val stream = resourceManager.getResource(resource).orElse(null)?.open()
+        val json = Json {
+            ignoreUnknownKeys = true
+            isLenient = true
+            allowStructuredMapKeys = true
+        }
+
+        models.forEach { (_, modelName) ->
+            val resource = ResourceLocation.tryBuild(MODID, "displays/$modelName.display.json") ?: return@forEach
+            val resourceOptional = resourceManager.getResource(resource)
 
             val settings = try {
+                val stream = resourceOptional.orElse(null)?.open()
+
                 if (stream == null) {
-                    LOGGER.info("No display config found for model '$value', using default.")
-                    CmdItemDisplay.defaultDisplaySettings()
+                    LOGGER.info("No display config found for model '$modelName', using default.")
+                    CmdItemDisplay.DisplaySettings()
                 } else {
-                    stream.use {
-                        val reader = InputStreamReader(it)
+                    stream.use { input ->
+                        val reader = InputStreamReader(input)
                         val parsed = json.decodeFromString(
                             CmdItemDisplay.DisplaySettings.serializer(),
                             reader.readText()
@@ -62,61 +71,40 @@ object Resources {
                     }
                 }
             } catch (e: Exception) {
-                LOGGER.warning("Failed to load display setting for model [$value], using default.")
-                CmdItemDisplay.defaultDisplaySettings()
+                LOGGER.warning("Failed to load display setting for model [$modelName], using default. Error: ${e.message}")
+                CmdItemDisplay.DisplaySettings()
             }
 
-            displays[value] = settings
+            displays[modelName] = settings
+        }
 
-            LOGGER.info(
-                buildString {
-                    appendLine()
-                    appendLine("=== [ CMDITEMS | DISPLAYS SETTINGS ] ===")
-                    displays.entries.forEach { (key, value) ->
-                        val serialized = json.encodeToString(CmdItemDisplay.DisplaySettings.serializer(), value)
-                        appendLine("$key = $serialized")
-                    }
-                    appendLine("========================================")
+        if (displays.isNotEmpty()) {
+            val logOutput = buildString {
+                appendLine()
+                appendLine("=== [ CMDITEMS | DISPLAYS SETTINGS ] ===")
+                displays.entries.forEach { (key, value) ->
+                    val serialized = json.encodeToString(CmdItemDisplay.DisplaySettings.serializer(), value)
+                    appendLine("$key = $serialized")
                 }
-            )
+                appendLine("========================================")
+            }
+            LOGGER.info(logOutput)
         }
     }
 
     private fun CmdItemDisplay.DisplaySettings.withDefaultsFilled(): CmdItemDisplay.DisplaySettings {
-        fun CmdItemDisplay.DisplayInfo?.orDefault(): CmdItemDisplay.DisplayInfo = this ?: CmdItemDisplay.putDisplayInfo()
-
-        fun CmdItemDisplay.HandsDisplayType?.fill(): CmdItemDisplay.HandsDisplayType = CmdItemDisplay.HandsDisplayType(
-            leftHand = this?.leftHand.orDefault(),
-            rightHand = this?.rightHand.orDefault()
-        )
-
-        val filledHands = CmdItemDisplay.HandsDisplay(
-            firstPerson = hands.firstPerson.fill(),
-            thirdPerson = hands.thirdPerson.fill()
-        )
-
-        val filledHead = this.head.orDefault()
-
-        val filledGui = this.gui.orDefault()
-
-        val filledFacings = world.itemFrame.facings.mapValues { (_, rotations) ->
-            CmdItemDisplay.ItemFrameDisplayRotation(
-                rotation = (0..7).associateWith { i ->
-                    rotations.rotation[i].orDefault()
-                }
-            )
-        }
-
-        val filledWorld = CmdItemDisplay.WorldDisplay(
-            ground = world.ground.orDefault(),
-            itemFrame = CmdItemDisplay.ItemFrameDisplay(facings = filledFacings)
-        )
+        fun CmdItemDisplay.DisplayInfo?.orDefault(): CmdItemDisplay.DisplayInfo = this ?: CmdItemDisplay.DisplayInfo()
 
         return CmdItemDisplay.DisplaySettings(
-            hands = filledHands,
-            head = filledHead,
-            gui = filledGui,
-            world = filledWorld
+            firstPersonLeftHand = firstPersonLeftHand.orDefault(),
+            firstPersonRightHand = firstPersonRightHand.orDefault(),
+            thirdPersonLeftHand = thirdPersonLeftHand.orDefault(),
+            thirdPersonRightHand = thirdPersonRightHand.orDefault(),
+            head = head.orDefault(),
+            ground = ground.orDefault(),
+            fixed = fixed.orDefault(),
+            gui = gui.orDefault(),
+            renderType = renderType
         )
     }
 }

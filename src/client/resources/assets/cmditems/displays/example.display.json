@@ -1,7 +1,5 @@
 {
-  "world": {
-    "ground": {
-      "scale": [4.0, 0.0, 0.0]
-    }
+  "ground": {
+    "scale": [8, 8, 8]
   }
 }

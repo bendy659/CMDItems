@@ -14,9 +14,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import ru.benos.cmditems.client.*;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.renderer.GeoItemRenderer;
-
-import java.util.Objects;
 
 @Mixin(ItemRenderer.class)
 public class MixinItemRenderer {
@@ -43,7 +40,7 @@ public class MixinItemRenderer {
 
                 ItemStack proxyStack;
                 AnimatableInstanceCache animatableInstanceCache;
-                GeoItemRenderer<CmdItem> renderer;
+                CmdItemRenderer renderer;
 
                 animatableInstanceCache = cache.getAnimatableInstanceCache();
                 item.setAnimatableInstanceCache(animatableInstanceCache);
@@ -51,8 +48,6 @@ public class MixinItemRenderer {
 
                 proxyStack = cache.getItemStack();
 
-                //GeoItemRenderer<CmdItem> renderer = new CmdItemRenderer(item.getGeoModel(customModelData.value()));
-                //GeoItemRenderer<CmdItem> renderer = CmdRenderersCache.INSTANCE.getRenderer(customModelData.value());
                 renderer.renderByItem(proxyStack, displayContext, poseStack, bufferSource, packedLight, packedOverlay);
 
                 CmdItemCache.INSTANCE.putCache(

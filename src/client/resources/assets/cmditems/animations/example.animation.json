@@ -5,14 +5,14 @@
 			"loop": true,
 			"animation_length": 8,
 			"bones": {
-				"bone": {
+				"out": {
 					"rotation": {
-						"vector": ["query.anim_time * 45", "query.anim_time * 45     ", "-query.anim_time * 45"]
+						"vector": ["query.anim_time * 45", "query.anim_time * 45     ", 0]
 					}
 				},
-				"bone2": {
+				"in": {
 					"rotation": {
-						"vector": ["-query.anim_time * 45", "-query.anim_time * 45     ", "query.anim_time * 45"]
+						"vector": ["-query.anim_time * 45", "-query.anim_time * 45     ", 0]
 					}
 				}
 			}

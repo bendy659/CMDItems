@@ -36,6 +36,9 @@ class CmditemsClient : ClientModInitializer {
                         loadModels(resourceManager)
                         loadDisplays(resourceManager)
                     }
+
+                    // Очистка кеша моделей //
+                    CmdItemCache.clearCache()
                 }
             }
         )

@@ -1,86 +1,36 @@
 package ru.benos.cmditems.client
 
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 object CmdItemDisplay {
     @Serializable
     data class DisplaySettings(
-        val hands: HandsDisplay,
-        val head: DisplayInfo,
-        val gui: DisplayInfo,
-        val world: WorldDisplay
+        @SerialName("first_person_left_hand") val firstPersonLeftHand: DisplayInfo = DisplayInfo(),
+        @SerialName("first_person_right_hand") val firstPersonRightHand: DisplayInfo = DisplayInfo(),
+        @SerialName("third_person_left_hand") val thirdPersonLeftHand: DisplayInfo = DisplayInfo(),
+        @SerialName("third_person_right_hand") val thirdPersonRightHand: DisplayInfo = DisplayInfo(),
+        @SerialName("head") val head: DisplayInfo = DisplayInfo(),
+        @SerialName("ground") val ground: DisplayInfo = DisplayInfo(),
+        @SerialName("fixed") val fixed: DisplayInfo = DisplayInfo(),
+        @SerialName("gui") val gui: DisplayInfo = DisplayInfo(),
+        @SerialName("render_type") val renderType: RenderType = RenderType.DEFAULT
     )
 
     @Serializable
-    data class HandsDisplay(
-        val firstPerson: HandsDisplayType,
-        val thirdPerson: HandsDisplayType
-    )
-
-    @Serializable
-    data class HandsDisplayType(
-        val leftHand: DisplayInfo,
-        val rightHand: DisplayInfo
-    )
-
-    @Serializable
-    data class WorldDisplay(
-        val ground: DisplayInfo,
-        val itemFrame: ItemFrameDisplay
-    )
-
-    @Serializable
-    data class ItemFrameDisplay(
-        val facings: Map<String, ItemFrameDisplayRotation>
-    )
-
-    @Serializable
-    data class ItemFrameDisplayRotation(
-        val rotation: Map<Int, DisplayInfo>
-    )
+    enum class RenderType {
+        DEFAULT,
+        GLOW,
+        LIGHT,
+        GLOW_LIGHT
+    }
 
     // ==== //
 
     @Serializable
     data class DisplayInfo(
-        val model: String?, // use other model
-        val transform: List<Double>, // transformation [x, y, z]
-        val rotation: List<Double>, // rotation [x, y, z]
-        val scale: List<Double>, // scale [x, y, z]
-        val renderType: String // renderType [ Default, Glow, PhysicLight ]
+        @SerialName("transition") val transition: List<Double> = listOf(0.0, 0.0, 0.0),
+        @SerialName("rotation") val rotation: List<Double> = listOf(0.0, 0.0, 0.0),
+        @SerialName("scale") val scale: List<Double> = listOf(1.0, 1.0, 1.0)
     )
-
-    // ==== //
-
-    fun defaultDisplaySettings(): DisplaySettings {
-        return DisplaySettings(
-            HandsDisplay(
-                HandsDisplayType(
-                    putDisplayInfo(),
-                    putDisplayInfo()
-                ),
-                HandsDisplayType(
-                    putDisplayInfo(),
-                    putDisplayInfo()
-                )
-            ),
-            putDisplayInfo(),
-            putDisplayInfo(),
-            WorldDisplay(
-                putDisplayInfo(),
-                ItemFrameDisplay(
-                    emptyMap()
-                )
-            )
-        )
-    }
-    
-    fun putDisplayInfo(
-        model: String? = null,
-        transform: List<Double > = listOf(0.0, 0.0, 0.0),
-        rotation: List<Double > = listOf(0.0, 0.0, 0.0),
-        scale: List<Double> = listOf(1.0, 1.0, 1.0),
-        renderType: String = "Default"
-        
-    ) = DisplayInfo(model, transform, rotation, scale, renderType)
 }

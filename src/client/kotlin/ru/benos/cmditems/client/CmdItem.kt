@@ -86,15 +86,15 @@ class CmdItemRenderer(
         val transform: (Boolean, List<Double>, List<Double>, List<Double>) -> Unit = { leftHand, t, r, s ->
             poseStack.apply {
                 translate(
-                    t[0] / 16.0,
-                    t[1] / 16.0,
-                    t[2] / 16.0
+                    t[0],
+                    t[1],
+                    t[2]
                 )
 
                 mulPose(Quaternionf().rotateXYZ(
-                    Math.toRadians(r[0]).toFloat(),
-                    Math.toRadians(r[1]).toFloat(),
-                    Math.toRadians(r[2]).toFloat()
+                    r[0].toFloat(),
+                    r[1].toFloat(),
+                    r[2].toFloat()
                 ))
 
                 scale(
